@@ -1,8 +1,8 @@
 {
-  "name": "@minimal-kit/simple-cra-js",
-  "author": "Minimals",
+  "name": "@car-decor-website/vihan-car-decor",
+  "author": "sai-rathod",
   "version": "5.1.0",
-  "description": "Simple Cra & JavaScript",
+  "description": "Car Decor Website",
   "private": true,
   "scripts": {
     "start": "react-scripts start",
