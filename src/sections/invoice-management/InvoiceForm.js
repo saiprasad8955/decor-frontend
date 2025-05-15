@@ -16,9 +16,10 @@ import {
   InputLabel,
   FormControl,
   Grid,
+  Autocomplete,
 } from '@mui/material';
 import PropTypes from 'prop-types';
-import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { useForm, useFieldArray, Controller, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 import dayjs from 'dayjs';
@@ -28,6 +29,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { set } from 'lodash';
 
 dayjs.extend(utc);
 
@@ -43,14 +45,17 @@ const InvoiceSchema = Yup.object().shape({
       Yup.object().shape({
         item: Yup.string().required('Item is required'),
         quantity: Yup.number()
+          .transform((value, originalValue) => (originalValue === '' ? undefined : value))
           .required('Quantity is required')
           .min(1, 'Quantity must be at least 1')
           .max(10000, 'Quantity too high'),
         rate: Yup.number()
+          .transform((value, originalValue) => (originalValue === '' ? undefined : value))
           .required('Rate is required')
           .min(0, 'Rate cannot be negative')
           .max(1000000, 'Rate too high'),
         tax: Yup.number()
+          .transform((value, originalValue) => (originalValue === '' ? undefined : value))
           .required('Tax is required')
           .min(0, 'Tax cannot be negative')
           .max(100, 'Tax must be less than or equal to 100'),
@@ -58,7 +63,10 @@ const InvoiceSchema = Yup.object().shape({
       })
     )
     .min(1, 'At least one item is required'),
-  discount: Yup.number().min(0, 'Discount cannot be negative').default(0),
+  discount: Yup.number()
+    .transform((value, originalValue) => (originalValue === '' ? undefined : value))
+    .min(0, 'Discount cannot be negative')
+    .default(0),
 });
 
 export default function InvoiceForm({ onSubmit, onClose, initialData, customers, itemsList }) {
@@ -73,7 +81,7 @@ export default function InvoiceForm({ onSubmit, onClose, initialData, customers,
     resolver: yupResolver(InvoiceSchema),
     defaultValues: {
       customerId: initialData?.customerId ? initialData.customerId : '',
-      sales_person: initialData?.sales_person || '',
+      sales_person: initialData?.sales_person || 'Shivraj',
       invoice_date: initialData?.invoice_date || dayjs().startOf('day').utc().toISOString(),
       delivery_date:
         initialData?.delivery_date || dayjs().add(1, 'day').startOf('day').utc().toISOString(),
@@ -90,14 +98,17 @@ export default function InvoiceForm({ onSubmit, onClose, initialData, customers,
     name: 'items',
   });
 
-  const watchedItems = watch('items');
+  // const watchedItems = watch('items');
   const discount = watch('discount');
-  // Recalculate totals when fields change
+
+  const watchedItems = useWatch({ control, name: 'items' });
+
   useEffect(() => {
-    watchedItems.forEach((item, index) => {
-      const quantity = Number(item.quantity) || 0;
-      const rate = Number(item.rate) || 0;
-      const tax = Number(item.tax) || 0;
+    watchedItems?.forEach((item, index) => {
+      console.log('cjainging item..');
+      const quantity = Number(item?.quantity) || 0;
+      const rate = Number(item?.rate) || 0;
+      const tax = Number(item?.tax) || 0;
 
       const base = quantity * rate;
       const taxAmount = (tax / 100) * base;
@@ -105,7 +116,7 @@ export default function InvoiceForm({ onSubmit, onClose, initialData, customers,
 
       setValue(`items.${index}.total`, total);
     });
-  }, [watchedItems, discount, setValue]);
+  }, [watchedItems, setValue]);
 
   // Totals
   const subtotal = watchedItems.reduce((sum, curr) => sum + (curr.total || 0), 0);
@@ -119,7 +130,6 @@ export default function InvoiceForm({ onSubmit, onClose, initialData, customers,
       final_amount: finalAmount,
     };
     onSubmit(formData);
-    onClose();
   };
 
   useEffect(() => {
@@ -150,7 +160,7 @@ export default function InvoiceForm({ onSubmit, onClose, initialData, customers,
       <Grid container spacing={2}>
         {/* Customer */}
         <Grid item xs={12} md={6}>
-          <FormControl fullWidth>
+          {/* <FormControl fullWidth>
             <InputLabel id="customer-select-label">Select Customer</InputLabel>
             <Select
               labelId="customer-select-label"
@@ -167,7 +177,30 @@ export default function InvoiceForm({ onSubmit, onClose, initialData, customers,
                 </MenuItem>
               ))}
             </Select>
-          </FormControl>
+          </FormControl> */}
+          <Controller
+            control={control}
+            name="customerId"
+            render={({ field }) => (
+              <Autocomplete
+                options={customers}
+                getOptionLabel={(option) => option.name || ''}
+                isOptionEqualToValue={(option, value) => option._id === value._id}
+                value={customers.find((c) => c._id === field.value) || null}
+                onChange={(_, selectedCustomer) => {
+                  field.onChange(selectedCustomer ? selectedCustomer._id : '');
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select Customer"
+                    error={!!errors.customerId}
+                    helperText={errors.customerId?.message}
+                  />
+                )}
+              />
+            )}
+          />
         </Grid>
 
         {/* Sales Person */}
@@ -277,24 +310,26 @@ export default function InvoiceForm({ onSubmit, onClose, initialData, customers,
                         control={control}
                         name={`items.${index}.item`}
                         render={({ field: controllerField }) => (
-                          <FormControl style={{ width: '200px' }}>
-                            <InputLabel id="item-simple-select-label">Select an Item</InputLabel>
-                            <Select
-                              labelId="item-simple-select-label"
-                              id="item-simple-select"
-                              label="Select an Item"
-                              style={{ width: '200px' }}
-                              {...controllerField}
-                              value={controllerField.value || ''} // <-- this line is needed!
-                              error={!!errors.items?.[index]?.item}
-                            >
-                              {itemsList.map((itm) => (
-                                <MenuItem key={itm._id} value={itm._id}>
-                                  {itm.item_name}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
+                          <Autocomplete
+                            options={itemsList}
+                            getOptionLabel={(option) => option.item_name || ''}
+                            isOptionEqualToValue={(option, value) => option._id === value._id}
+                            value={
+                              itemsList.find((item) => item._id === controllerField.value) || null
+                            }
+                            onChange={(_, selectedItem) => {
+                              controllerField.onChange(selectedItem ? selectedItem._id : '');
+                            }}
+                            renderInput={(params) => (
+                              <TextField
+                                {...params}
+                                label="Select an Item"
+                                error={!!errors.items?.[index]?.item}
+                                helperText={errors.items?.[index]?.item?.message}
+                              />
+                            )}
+                            sx={{ width: 200 }}
+                          />
                         )}
                       />
                     </TableCell>
@@ -306,18 +341,18 @@ export default function InvoiceForm({ onSubmit, onClose, initialData, customers,
                           <TextField
                             type="number"
                             {...quantityField}
-                            onChange={(e) => {
-                              const value = Number(e.target.value);
-                              setValue(`items.${index}.quantity`, value);
-                              const q = value;
-                              const r = Number(watch(`items.${index}.rate`)) || 0;
-                              const t = Number(watch(`items.${index}.tax`)) || 0;
+                            // onChange={(e) => {
+                            //   const value = Number(e.target.value);
+                            //   setValue(`items.${index}.quantity`, value || '');
+                            //   const q = value;
+                            //   const r = Number(watch(`items.${index}.rate`)) || 0;
+                            //   const t = Number(watch(`items.${index}.tax`)) || 0;
 
-                              const base = q * r;
-                              const taxAmount = (t / 100) * base;
-                              const total = base + taxAmount;
-                              setValue(`items.${index}.total`, total);
-                            }}
+                            //   const base = q * r;
+                            //   const taxAmount = (t / 100) * base;
+                            //   const total = base + taxAmount;
+                            //   setValue(`items.${index}.total`, total);
+                            // }}
                             error={!!errors.items?.[index]?.quantity}
                             helperText={errors.items?.[index]?.quantity?.message}
                           />
@@ -333,18 +368,18 @@ export default function InvoiceForm({ onSubmit, onClose, initialData, customers,
                           <TextField
                             type="number"
                             {...rateField}
-                            onChange={(e) => {
-                              const value = Number(e.target.value);
-                              setValue(`items.${index}.rate`, value);
-                              const q = Number(watch(`items.${index}.quantity`)) || 0;
-                              const r = value;
-                              const t = Number(watch(`items.${index}.tax`)) || 0;
+                            // onChange={(e) => {
+                            //   const value = Number(e.target.value);
+                            //   setValue(`items.${index}.rate`, value);
+                            //   const q = Number(watch(`items.${index}.quantity`)) || 0;
+                            //   const r = value;
+                            //   const t = Number(watch(`items.${index}.tax`)) || 0;
 
-                              const base = q * r;
-                              const taxAmount = (t / 100) * base;
-                              const total = base + taxAmount;
-                              setValue(`items.${index}.total`, total);
-                            }}
+                            //   const base = q * r;
+                            //   const taxAmount = (t / 100) * base;
+                            //   const total = base + taxAmount;
+                            //   setValue(`items.${index}.total`, total);
+                            // }}
                             error={!!errors.items?.[index]?.rate}
                             helperText={errors.items?.[index]?.rate?.message}
                           />
@@ -360,18 +395,18 @@ export default function InvoiceForm({ onSubmit, onClose, initialData, customers,
                           <TextField
                             type="number"
                             {...taxRate}
-                            onChange={(e) => {
-                              const value = Number(e.target.value);
-                              setValue(`items.${index}.tax`, value);
-                              const q = Number(watch(`items.${index}.quantity`)) || 0;
-                              const r = Number(watch(`items.${index}.rate`)) || 0;
-                              const t = value;
+                            // onChange={(e) => {
+                            //   const value = Number(e.target.value);
+                            //   setValue(`items.${index}.tax`, value);
+                            //   const q = Number(watch(`items.${index}.quantity`)) || 0;
+                            //   const r = Number(watch(`items.${index}.rate`)) || 0;
+                            //   const t = value;
 
-                              const base = q * r;
-                              const taxAmount = (t / 100) * base;
-                              const total = base + taxAmount;
-                              setValue(`items.${index}.total`, total);
-                            }}
+                            //   const base = q * r;
+                            //   const taxAmount = (t / 100) * base;
+                            //   const total = base + taxAmount;
+                            //   setValue(`items.${index}.total`, total);
+                            // }}
                             error={!!errors.items?.[index]?.tax}
                             helperText={errors.items?.[index]?.tax?.message}
                           />
@@ -420,7 +455,7 @@ export default function InvoiceForm({ onSubmit, onClose, initialData, customers,
             helperText={errors.discount?.message}
             onBlur={() => {
               if (!discount || discount === 0 || discount === '') {
-                setValue('discount', 0);
+                setValue('discount', '');
               }
             }}
           />

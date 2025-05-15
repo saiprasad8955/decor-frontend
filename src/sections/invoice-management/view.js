@@ -92,6 +92,7 @@ export default function InvoiceView() {
         enqueueSnackbar(err.error || 'Something went wrong!', { variant: 'error' });
       } finally {
         setIsSubmitting(false);
+        setOpenDrawer(false);
       }
     },
     [editInvoice, enqueueSnackbar]
@@ -203,7 +204,7 @@ export default function InvoiceView() {
                     <TableCell>{invoice.customerId?.name}</TableCell>
                     <TableCell>{invoice.sales_person}</TableCell>
                     <TableCell>{new Date(invoice.invoice_date).toLocaleDateString()}</TableCell>
-                    <TableCell>₹{invoice.final_amount.toFixed(2)}</TableCell>
+                    <TableCell>₹ {invoice.final_amount.toFixed(2)}</TableCell>
                     <TableCell align="right">
                       <IconButton
                         color="primary"

@@ -20,10 +20,10 @@ const validationSchema = Yup.object().shape({
   selling_price: Yup.number()
     .typeError('Selling Price must be a number')
     .required('Selling Price is required'),
-  quantity: Yup.number()
-    .typeError('Quantity must be a number')
-    .required('Quantity is required')
-    .moreThan(0, 'Quantity must be greater than zero'),
+  // quantity: Yup.number()
+  //   .typeError('Quantity must be a number')
+  //   .required('Quantity is required')
+  //   .moreThan(0, 'Quantity must be greater than zero'),
 });
 
 export default function ItemForm({ initialData = {}, onSubmit, onClose, isEdit }) {
@@ -48,7 +48,7 @@ export default function ItemForm({ initialData = {}, onSubmit, onClose, isEdit }
       tax: initialData.tax || '',
       cost_price: initialData.cost_price || '',
       selling_price: initialData.selling_price || '',
-      quantity: initialData.quantity || '',
+      // quantity: initialData.quantity || '',
     },
   });
 
@@ -153,7 +153,7 @@ export default function ItemForm({ initialData = {}, onSubmit, onClose, isEdit }
           />
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        {/* <Grid item xs={12} md={6}>
           <TextField
             label="Quantity"
             {...register('quantity')}
@@ -161,7 +161,7 @@ export default function ItemForm({ initialData = {}, onSubmit, onClose, isEdit }
             helperText={errors.quantity?.message}
             fullWidth
           />
-        </Grid>
+        </Grid> */}
 
         <Grid item xs={12} md={6}>
           <FormControlLabel
