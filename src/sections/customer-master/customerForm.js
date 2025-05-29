@@ -17,7 +17,6 @@ export default function CustomerForm({ initialData = {}, onSubmit, onClose }) {
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(CustomerSchema),
@@ -31,8 +30,7 @@ export default function CustomerForm({ initialData = {}, onSubmit, onClose }) {
 
   const submitForm = (data) => {
     onSubmit(data);
-    reset();
-    onClose();
+    // reset();
   };
 
 

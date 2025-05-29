@@ -14,25 +14,22 @@ import {
 } from '@mui/material';
 import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
-import html2pdf from 'html2pdf.js';
-import { Document, Page, PDFDownloadLink, PDFViewer } from '@react-pdf/renderer';
-import { InvoicePDF } from './InvoicePDF';
 
 export default function ViewInvoice({ invoiceData, customers, itemsList, onClose }) {
   const printRef = useRef();
 
-  const handleGeneratePDF = () => {
-    const element = printRef.current;
-    const opt = {
-      margin: 0.5,
-      filename: `invoice_${invoiceData?.customerId || 'customer'}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
-    };
+  // const handleGeneratePDF = () => {
+  //   const element = printRef.current;
+  //   const opt = {
+  //     margin: 0.5,
+  //     filename: `invoice_${invoiceData?.customerId || 'customer'}.pdf`,
+  //     image: { type: 'jpeg', quality: 0.98 },
+  //     html2canvas: { scale: 2 },
+  //     jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+  //   };
 
-    html2pdf().set(opt).from(element).save();
-  };
+  //   html2pdf().set(opt).from(element).save();
+  // };
 
   const getCustomerName = (id) =>
     typeof id === 'string'
@@ -47,7 +44,6 @@ export default function ViewInvoice({ invoiceData, customers, itemsList, onClose
   const subtotal = invoiceData.items.reduce((sum, item) => sum + item.total, 0);
   const finalAmount = subtotal - (invoiceData.discount || 0);
 
-  const handlePrint = () => window.print();
 
   return (
     <Box>

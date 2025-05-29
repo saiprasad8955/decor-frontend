@@ -165,9 +165,9 @@ export default function ItemView() {
                 <TableCell>SKU</TableCell>
                 <TableCell>Brand</TableCell>
                 <TableCell>Category</TableCell>
-                {/* <TableCell align="center">Quantity</TableCell> */}
-                {/* <TableCell align="center">Sold Quantity</TableCell> */}
-                {/* <TableCell align="center">Remaining Quantity</TableCell> */}
+                <TableCell align="center">Quantity</TableCell>
+                <TableCell align="center">Sold Quantity</TableCell>
+                <TableCell align="center">Remaining Quantity</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -179,9 +179,9 @@ export default function ItemView() {
                     <TableCell>{item.sku}</TableCell>
                     <TableCell>{item.brand_name}</TableCell>
                     <TableCell>{item.category}</TableCell>
-                    {/* <TableCell align="center">{item.quantity}</TableCell>
+                    <TableCell align="center">{item.quantity}</TableCell>
                     <TableCell align="center">{item.sold_quantity}</TableCell>
-                    <TableCell align="center">{item.remaining_quantity}</TableCell> */}
+                    <TableCell align="center">{item.remaining_quantity}</TableCell>
                     <TableCell align="right">
                       <IconButton
                         color="primary"

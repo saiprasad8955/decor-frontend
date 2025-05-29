@@ -4,7 +4,6 @@ import {
   Button,
   TextField,
   Typography,
-  MenuItem,
   IconButton,
   Table,
   TableHead,
@@ -12,9 +11,6 @@ import {
   TableCell,
   TableBody,
   Paper,
-  Select,
-  InputLabel,
-  FormControl,
   Grid,
   Autocomplete,
 } from '@mui/material';
@@ -29,7 +25,6 @@ import AddIcon from '@mui/icons-material/Add';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { set } from 'lodash';
 
 dayjs.extend(utc);
 
@@ -341,18 +336,6 @@ export default function InvoiceForm({ onSubmit, onClose, initialData, customers,
                           <TextField
                             type="number"
                             {...quantityField}
-                            // onChange={(e) => {
-                            //   const value = Number(e.target.value);
-                            //   setValue(`items.${index}.quantity`, value || '');
-                            //   const q = value;
-                            //   const r = Number(watch(`items.${index}.rate`)) || 0;
-                            //   const t = Number(watch(`items.${index}.tax`)) || 0;
-
-                            //   const base = q * r;
-                            //   const taxAmount = (t / 100) * base;
-                            //   const total = base + taxAmount;
-                            //   setValue(`items.${index}.total`, total);
-                            // }}
                             error={!!errors.items?.[index]?.quantity}
                             helperText={errors.items?.[index]?.quantity?.message}
                           />
@@ -368,18 +351,7 @@ export default function InvoiceForm({ onSubmit, onClose, initialData, customers,
                           <TextField
                             type="number"
                             {...rateField}
-                            // onChange={(e) => {
-                            //   const value = Number(e.target.value);
-                            //   setValue(`items.${index}.rate`, value);
-                            //   const q = Number(watch(`items.${index}.quantity`)) || 0;
-                            //   const r = value;
-                            //   const t = Number(watch(`items.${index}.tax`)) || 0;
-
-                            //   const base = q * r;
-                            //   const taxAmount = (t / 100) * base;
-                            //   const total = base + taxAmount;
-                            //   setValue(`items.${index}.total`, total);
-                            // }}
+                           
                             error={!!errors.items?.[index]?.rate}
                             helperText={errors.items?.[index]?.rate?.message}
                           />
@@ -395,18 +367,6 @@ export default function InvoiceForm({ onSubmit, onClose, initialData, customers,
                           <TextField
                             type="number"
                             {...taxRate}
-                            // onChange={(e) => {
-                            //   const value = Number(e.target.value);
-                            //   setValue(`items.${index}.tax`, value);
-                            //   const q = Number(watch(`items.${index}.quantity`)) || 0;
-                            //   const r = Number(watch(`items.${index}.rate`)) || 0;
-                            //   const t = value;
-
-                            //   const base = q * r;
-                            //   const taxAmount = (t / 100) * base;
-                            //   const total = base + taxAmount;
-                            //   setValue(`items.${index}.total`, total);
-                            // }}
                             error={!!errors.items?.[index]?.tax}
                             helperText={errors.items?.[index]?.tax?.message}
                           />
@@ -461,7 +421,7 @@ export default function InvoiceForm({ onSubmit, onClose, initialData, customers,
           />
         </Grid>
 
-        <Grid item xs={12} md={12}>
+        <Grid item xs={12} md={12} display="flex" flexDirection="row" justifyContent="flex-end" >
           <Box>
             <Typography>Subtotal: ₹{subtotal.toFixed(2)}</Typography>
             <Typography>Final Amount: ₹{finalAmount.toFixed(2)}</Typography>

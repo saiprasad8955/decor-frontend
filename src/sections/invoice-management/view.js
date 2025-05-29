@@ -85,14 +85,12 @@ export default function InvoiceView() {
             enqueueSnackbar('Invoice added successfully.', { variant: 'success' });
           }
         }
-
         setOpenDrawer(false);
       } catch (err) {
         console.error('Failed to save invoice:', err);
         enqueueSnackbar(err.error || 'Something went wrong!', { variant: 'error' });
       } finally {
         setIsSubmitting(false);
-        setOpenDrawer(false);
       }
     },
     [editInvoice, enqueueSnackbar]

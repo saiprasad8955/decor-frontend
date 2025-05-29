@@ -79,7 +79,6 @@ export default function OneView() {
             enqueueSnackbar('Customer added successfully.', { variant: 'success' });
           }
         }
-
         setOpenDrawer(false);
       } catch (err) {
         console.error('Failed to save customer:', err);
