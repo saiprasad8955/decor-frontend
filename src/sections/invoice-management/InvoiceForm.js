@@ -100,7 +100,6 @@ export default function InvoiceForm({ onSubmit, onClose, initialData, customers,
 
   useEffect(() => {
     watchedItems?.forEach((item, index) => {
-      console.log('cjainging item..');
       const quantity = Number(item?.quantity) || 0;
       const rate = Number(item?.rate) || 0;
       const tax = Number(item?.tax) || 0;

@@ -57,8 +57,10 @@ export default function InvoiceView() {
   const invoices = invoicesData?.data || [];
   const totalInvoices = invoicesData?.total || 0;
 
-  const { data: customers } = useSWR(endpoints.customer.list, fetcher);
-  const { data: itemsList } = useSWR(endpoints.items.list, fetcher);
+  const { data: customersData } = useSWR(endpoints.customer.list, fetcher);
+  const customers = customersData?.data || [];
+  const { data: itemsData } = useSWR(endpoints.items.list, fetcher);
+  const itemsList = itemsData?.data || [];
 
   const handleOpenDeletePopover = (event, id) => {
     setDeletePopoverEl(event.currentTarget);
