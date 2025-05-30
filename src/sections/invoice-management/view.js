@@ -215,56 +215,13 @@ export default function InvoiceView() {
         <TableCell>{new Date(invoice.invoice_date).toLocaleDateString() || 'N/A'}</TableCell>
         <TableCell>₹ {invoice.final_amount.toFixed(2) || 'N/A'}</TableCell>
         <TableCell align="right">
-          <IconButton
-            color="primary"
-            onClick={() => {
-              const invoiceD = {
-                _id: invoice._id,
-                customerId: invoice.customerId._id,
-                sales_person: invoice.sales_person,
-                invoice_date: dayjs(invoice.invoice_date),
-                delivery_date: dayjs(invoice.delivery_date),
-                description: invoice.description,
-                items: invoice.items.map((itemObj) => ({
-                  item: itemObj.item._id,
-                  quantity: itemObj.quantity,
-                  rate: itemObj.rate,
-                  tax: itemObj.tax,
-                  total: itemObj.total,
-                })),
-                discount: invoice.discount,
-              };
-              setEditInvoice(invoiceD);
-              setOpenDrawer(true);
-            }}
-          >
+          <IconButton color="primary" onClick={() => editInvoiceData(invoice)}>
             <Edit />
           </IconButton>
           <IconButton color="error" onClick={(e) => handleOpenDeletePopover(e, invoice._id)}>
             <Delete />
           </IconButton>
-          <IconButton
-            onClick={() => {
-              const invoiceD = {
-                _id: invoice._id,
-                customerId: invoice.customerId._id,
-                sales_person: invoice.sales_person,
-                invoice_date: dayjs(invoice.invoice_date),
-                delivery_date: dayjs(invoice.delivery_date),
-                description: invoice.description,
-                items: invoice.items.map((itemObj) => ({
-                  item: itemObj.item._id,
-                  quantity: itemObj.quantity,
-                  rate: itemObj.rate,
-                  tax: itemObj.tax,
-                  total: itemObj.total,
-                })),
-                discount: invoice.discount,
-              };
-              setViewInvoice(invoiceD);
-              setViewModal(true);
-            }}
-          >
+          <IconButton onClick={() => viewInvoiceData(invoice)}>
             <Visibility />
           </IconButton>
           <IconButton onClick={() => downloadInvoicePdf(invoice._id)}>
@@ -275,6 +232,49 @@ export default function InvoiceView() {
     ));
   };
 
+  const viewInvoiceData = (invoice) => {
+    const invoiceD = {
+      _id: invoice._id,
+      invoice_number: invoice.invoice_number,
+      customerId: invoice.customerId._id,
+      sales_person: invoice.sales_person,
+      invoice_date: dayjs(invoice.invoice_date),
+      delivery_date: dayjs(invoice.delivery_date),
+      description: invoice.description,
+      items: invoice.items.map((itemObj) => ({
+        item: itemObj.item._id,
+        quantity: itemObj.quantity,
+        rate: itemObj.rate,
+        tax: itemObj.tax,
+        total: itemObj.total,
+      })),
+      discount: invoice.discount,
+    };
+    setViewInvoice(invoiceD);
+    setViewModal(true);
+  };
+
+  const editInvoiceData = (invoice) => {
+    const invoiceD = {
+      _id: invoice._id,
+      invoice_number: invoice.invoice_number,
+      customerId: invoice.customerId._id,
+      sales_person: invoice.sales_person,
+      invoice_date: dayjs(invoice.invoice_date),
+      delivery_date: dayjs(invoice.delivery_date),
+      description: invoice.description,
+      items: invoice.items.map((itemObj) => ({
+        item: itemObj.item._id,
+        quantity: itemObj.quantity,
+        rate: itemObj.rate,
+        tax: itemObj.tax,
+        total: itemObj.total,
+      })),
+      discount: invoice.discount,
+    };
+    setEditInvoice(invoiceD);
+    setOpenDrawer(true);
+  };
   return (
     <Container maxWidth={settings.themeStretch ? false : 'xl'}>
       <Stack direction="row" justifyContent="space-between" mb={3}>

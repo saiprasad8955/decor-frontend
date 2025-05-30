@@ -42,6 +42,10 @@ export default function ViewInvoice({ invoiceData, customers, itemsList, onClose
 
         <Grid container spacing={2}>
           <Grid item xs={6}>
+            <Typography variant="subtitle2">Invoice Number</Typography>
+            <Typography>{invoiceData.invoice_number}</Typography>
+          </Grid>
+          <Grid item xs={6}>
             <Typography variant="subtitle2">Customer</Typography>
             <Typography>{getCustomerName(invoiceData.customerId)}</Typography>
           </Grid>
@@ -141,6 +145,7 @@ export default function ViewInvoice({ invoiceData, customers, itemsList, onClose
 
 ViewInvoice.propTypes = {
   invoiceData: PropTypes.shape({
+    invoice_number: PropTypes.string,
     customerId: PropTypes.oneOfType([PropTypes.string, PropTypes.shape({ _id: PropTypes.string })]),
     sales_person: PropTypes.string,
     invoice_date: PropTypes.oneOfType([
