@@ -189,6 +189,7 @@ export default function InvoiceForm({ onSubmit, onClose, initialData, customers,
                   <TextField
                     {...params}
                     label="Select Customer"
+                    placeholder='Select Customer'
                     error={!!errors.customerId}
                     helperText={errors.customerId?.message}
                   />
@@ -272,6 +273,7 @@ export default function InvoiceForm({ onSubmit, onClose, initialData, customers,
             {...register('description')}
             value={watch('description')}
             multiline
+            placeholder='Enter Description'
             rows={2}
             fullWidth
           />
@@ -351,7 +353,6 @@ export default function InvoiceForm({ onSubmit, onClose, initialData, customers,
                           <TextField
                             type="number"
                             {...rateField}
-                           
                             error={!!errors.items?.[index]?.rate}
                             helperText={errors.items?.[index]?.rate?.message}
                           />
@@ -406,7 +407,7 @@ export default function InvoiceForm({ onSubmit, onClose, initialData, customers,
           </Paper>
         </Grid>
 
-        <Grid item xs={12} md={12} display="flex" flexDirection="row" justifyContent="flex-end">
+        {/* <Grid item xs={12} md={12} display="flex" flexDirection="row" justifyContent="flex-end">
           <TextField
             label="Discount"
             type="number"
@@ -425,6 +426,42 @@ export default function InvoiceForm({ onSubmit, onClose, initialData, customers,
           <Box>
             <Typography>Subtotal: ₹{subtotal.toFixed(2)}</Typography>
             <Typography>Final Amount: ₹{finalAmount.toFixed(2)}</Typography>
+          </Box>
+        </Grid> */}
+
+        <Grid item xs={12} md={12}>
+          <Box display="flex" flexDirection="column" alignItems="flex-end" gap={2} width="100%">
+            <Box width="100%" maxWidth={300}>
+              <TextField
+                label="Discount"
+                type="number"
+                fullWidth
+                placeholder='Enter Discount Amount'
+                {...register('discount')}
+                error={!!errors.discount}
+                helperText={errors.discount?.message}
+                onBlur={() => {
+                  if (!discount || discount === 0 || discount === '') {
+                    setValue('discount', '');
+                  }
+                }}
+              />
+            </Box>
+
+            <Box width="100%" maxWidth={300}>
+              <Box display="flex" justifyContent="space-between">
+                <Typography fontWeight="bold">Subtotal:</Typography>
+                <Typography fontWeight="bold" align="right">
+                  ₹{subtotal.toFixed(2)}
+                </Typography>
+              </Box>
+              <Box display="flex" justifyContent="space-between">
+                <Typography fontWeight="bold">Final Amount:</Typography>
+                <Typography fontWeight="bold" align="right">
+                  ₹{finalAmount.toFixed(2)}
+                </Typography>
+              </Box>
+            </Box>
           </Box>
         </Grid>
 

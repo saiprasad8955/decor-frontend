@@ -15,6 +15,7 @@ import {
   CircularProgress,
   TextField,
   Backdrop,
+  TablePagination,
 } from '@mui/material';
 
 import { Edit, Delete } from '@mui/icons-material';
@@ -52,8 +53,18 @@ export default function OneView() {
     handleDelete(selectedCustomerId); // your existing delete logic
     handleCloseDeletePopover();
   };
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const limit = 10;
 
-  const { data: customers, error, isLoading } = useSWR(endpoints.customer.list, fetcher);
+  const {
+    data: customersData,
+    error,
+    isLoading,
+  } = useSWR(`${endpoints.customer.list}?page=${page}&limit=${rowsPerPage}`, fetcher);
+
+  const customers = customersData?.data || [];
+  const totalCustomers = customersData?.total || 0;
 
   const handleAdd = useCallback(() => {
     setEditCustomer(null);
@@ -68,13 +79,13 @@ export default function OneView() {
 
         if (editCustomer) {
           response = await axiosInstance.put(`/customer/update/${editCustomer._id}`, data);
-          mutate(endpoints.customer.list);
+          mutate(`${endpoints.customer.list}?page=${page}&limit=${limit}`);
           if (response?.status === 200) {
             enqueueSnackbar('Customer updated successfully.', { variant: 'success' });
           }
         } else {
           response = await axiosInstance.post('/customer/add', data);
-          mutate(endpoints.customer.list);
+          mutate(`${endpoints.customer.list}?page=${page}&limit=${limit}`);
           if (response?.status === 201) {
             enqueueSnackbar('Customer added successfully.', { variant: 'success' });
           }
@@ -87,7 +98,7 @@ export default function OneView() {
         setIsSubmitting(false);
       }
     },
-    [editCustomer, enqueueSnackbar]
+    [editCustomer, enqueueSnackbar, page, limit]
   );
 
   const handleDelete = useCallback(
@@ -96,7 +107,7 @@ export default function OneView() {
       try {
         await axiosInstance.delete(`/customer/delete/${id}`);
         enqueueSnackbar('Customer deleted successfully.', { variant: 'success' });
-        mutate(endpoints.customer.list);
+        mutate(`${endpoints.customer.list}?page=${page}&limit=${limit}`);
       } catch (err) {
         console.error('Failed to delete customer:', err);
         enqueueSnackbar(err.error || 'Something went wrong!', { variant: 'error' });
@@ -104,7 +115,7 @@ export default function OneView() {
         setIsSubmitting(false);
       }
     },
-    [enqueueSnackbar]
+    [enqueueSnackbar, page, limit]
   );
 
   if (error) {
@@ -112,7 +123,7 @@ export default function OneView() {
       <div style={{ width: '100%', justifyContent: 'center' }}>
         <Stack direction="row" justifyContent="space-between" mb={3}>
           <Typography variant="h4">Customers</Typography>
-          <Button color='primary' variant="contained" onClick={handleAdd}>
+          <Button color="primary" variant="contained" onClick={handleAdd}>
             Add Customer
           </Button>
         </Stack>
@@ -134,11 +145,61 @@ export default function OneView() {
       return name.includes(query) || email.includes(query) || number.includes(query);
     }) || [];
 
+  const renderCustomers = () => {
+    if (!customers || customers.length === 0) {
+      return (
+        <TableRow>
+          <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+            <Typography variant="body1" color="text.secondary">
+              No customers found! Please add a new customer.
+            </Typography>
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    if (!filteredCustomers || filteredCustomers.length === 0) {
+      return (
+        <TableRow>
+          <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+            <Typography variant="body1" color="text.secondary">
+              No customers found matching <strong>&quot;{searchQuery}&quot;</strong>. Try searching
+              by name, email, or number.
+            </Typography>
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    return filteredCustomers.map((customer) => (
+      <TableRow key={customer._id}>
+        <TableCell>{customer.name}</TableCell>
+        <TableCell>{customer.email || 'N/A'}</TableCell>
+        <TableCell>+91 {customer.number}</TableCell>
+        <TableCell>{customer.address || 'N/A'}</TableCell>
+        <TableCell align="right">
+          <IconButton
+            color="primary"
+            onClick={() => {
+              setEditCustomer(customer);
+              setOpenDrawer(true);
+            }}
+          >
+            <Edit />
+          </IconButton>
+          <IconButton color="error" onClick={(e) => handleOpenDeletePopover(e, customer._id)}>
+            <Delete />
+          </IconButton>
+        </TableCell>
+      </TableRow>
+    ));
+  };
+
   return (
     <Container maxWidth={settings.themeStretch ? false : 'xl'}>
       <Stack direction="row" justifyContent="space-between" mb={3}>
         <Typography variant="h4">Customers</Typography>
-        <Button variant="contained" color='primary' onClick={handleAdd}>
+        <Button variant="contained" color="primary" onClick={handleAdd}>
           Add Customer
         </Button>
       </Stack>
@@ -169,44 +230,18 @@ export default function OneView() {
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
-            <TableBody>
-              {filteredCustomers && filteredCustomers.length > 0 ? (
-                filteredCustomers.map((customer) => (
-                  <TableRow key={customer._id}>
-                    <TableCell>{customer.name}</TableCell>
-                    <TableCell>{customer.email || 'N/A'}</TableCell>
-                    <TableCell>+91 {customer.number}</TableCell>
-                    <TableCell>{customer.address || 'N/A'}</TableCell>
-                    <TableCell align="right">
-                      <IconButton
-                        color="primary"
-                        onClick={() => {
-                          setEditCustomer(customer);
-                          setOpenDrawer(true);
-                        }}
-                      >
-                        <Edit />
-                      </IconButton>
-                      <IconButton
-                        color="error"
-                        onClick={(e) => handleOpenDeletePopover(e, customer._id)}
-                      >
-                        <Delete />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
-                    <Typography variant="body1" color="text.secondary">
-                      No customers found matching <strong>&quot;{searchQuery}&quot;</strong>. Try
-                      searching by name, email, or number.
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
+            <TableBody>{renderCustomers()}</TableBody>
+            <TablePagination
+              count={totalCustomers}
+              page={page - 1}
+              onPageChange={(e, newPage) => setPage(newPage + 1)}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={(e) => {
+                setRowsPerPage(parseInt(e.target.value, 10));
+                setPage(1); // reset to first page
+              }}
+              rowsPerPageOptions={[5, 10, 25, 50]}
+            />
           </Table>
         )}
       </Paper>

@@ -7,12 +7,12 @@ import PropTypes from 'prop-types';
 const validationSchema = Yup.object().shape({
   item_name: Yup.string().required('Item Name is required'),
   item_type: Yup.string().required('Item Type is required'),
-  sku: Yup.string().required('SKU is required'),
-  part_number: Yup.string().required('Part Number is required'),
-  status: Yup.boolean().required('Status is required'),
-  description: Yup.string().required('Description is required'),
-  category: Yup.string().required('Category is required'),
-  brand_name: Yup.string().required('Brand Name is required'),
+  sku: Yup.string(),
+  part_number: Yup.string(),
+  status: Yup.boolean(),
+  description: Yup.string(),
+  category: Yup.string(),
+  brand_name: Yup.string(),
   tax: Yup.number().typeError('Tax must be a number').required('Tax is required'),
   cost_price: Yup.number()
     .typeError('Cost Price must be a number')
@@ -68,6 +68,7 @@ export default function ItemForm({ initialData = {}, onSubmit, onClose, isEdit }
             label="Item Name"
             {...register('item_name')}
             error={!!errors.item_name}
+            required
             helperText={errors.item_name?.message}
             fullWidth
           />
@@ -80,6 +81,7 @@ export default function ItemForm({ initialData = {}, onSubmit, onClose, isEdit }
             error={!!errors.item_type}
             helperText={errors.item_type?.message}
             fullWidth
+            required
           />
         </Grid>
 
@@ -129,6 +131,7 @@ export default function ItemForm({ initialData = {}, onSubmit, onClose, isEdit }
             {...register('tax')}
             error={!!errors.tax}
             helperText={errors.tax?.message}
+            required
             fullWidth
           />
         </Grid>
@@ -140,6 +143,7 @@ export default function ItemForm({ initialData = {}, onSubmit, onClose, isEdit }
             error={!!errors.cost_price}
             helperText={errors.cost_price?.message}
             fullWidth
+            required
           />
         </Grid>
 
@@ -150,6 +154,7 @@ export default function ItemForm({ initialData = {}, onSubmit, onClose, isEdit }
             error={!!errors.selling_price}
             helperText={errors.selling_price?.message}
             fullWidth
+            required
           />
         </Grid>
 
@@ -160,6 +165,7 @@ export default function ItemForm({ initialData = {}, onSubmit, onClose, isEdit }
             error={!!errors.quantity}
             helperText={errors.quantity?.message}
             fullWidth
+            required
           />
         </Grid>
 

@@ -43,6 +43,7 @@ export default function CustomerForm({ initialData = {}, onSubmit, onClose }) {
           error={!!errors.name}
           helperText={errors.name?.message}
           fullWidth
+          required
         />
         <TextField
           label="Mobile Number"
@@ -50,6 +51,7 @@ export default function CustomerForm({ initialData = {}, onSubmit, onClose }) {
           error={!!errors.number}
           helperText={errors.number?.message}
           fullWidth
+          required
         />
         <TextField
           label="Email"

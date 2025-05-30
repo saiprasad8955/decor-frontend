@@ -51,7 +51,7 @@ export function useNavData() {
       {
         // subheader: 'Services',
         items: [
-          { title: 'Customers', path: paths.dashboard.one, icon: ICONS.dashboard },
+          { title: 'Customers', path: paths.dashboard.one, icon: ICONS.user },
           { title: 'Items', path: paths.dashboard.two, icon: ICONS.ecommerce },
           { title: 'Invoices', path: paths.dashboard.three, icon: ICONS.analytics },
         ],

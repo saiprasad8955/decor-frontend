@@ -15,6 +15,7 @@ import {
   CircularProgress,
   TextField,
   Backdrop,
+  TablePagination,
 } from '@mui/material';
 import { useSnackbar } from 'src/components/snackbar';
 import { Edit, Delete } from '@mui/icons-material';
@@ -37,7 +38,18 @@ export default function ItemView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: items, error, isLoading } = useSWR(endpoints.items.list, fetcher); // 👈 Define this endpoint
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const limit = 10;
+
+  const {
+    data: itemsData,
+    error,
+    isLoading,
+  } = useSWR(`${endpoints.items.list}?page=${page}&limit=${rowsPerPage}`, fetcher); // 👈 Define this endpoint
+
+  const items = itemsData?.data || [];
+  const totalItems = itemsData?.total || 0;
 
   const handleOpenDeletePopover = (event, id) => {
     setDeletePopoverEl(event.currentTarget);
@@ -67,13 +79,13 @@ export default function ItemView() {
 
         if (editItem) {
           response = await axiosInstance.put(`/item/update/${editItem._id}`, data);
-          mutate(endpoints.items.list);
+          mutate(`${endpoints.items.list}?page=${page}&limit=${limit}`);
           if (response?.status === 200) {
             enqueueSnackbar('Item updated successfully.', { variant: 'success' });
           }
         } else {
           response = await axiosInstance.post('/item/add', data);
-          mutate(endpoints.items.list);
+          mutate(`${endpoints.items.list}?page=${page}&limit=${limit}`);
           if (response?.status === 201) {
             enqueueSnackbar('Item added successfully.', { variant: 'success' });
           }
@@ -87,7 +99,7 @@ export default function ItemView() {
         setIsSubmitting(false);
       }
     },
-    [enqueueSnackbar, editItem]
+    [enqueueSnackbar, editItem, page, limit]
   );
 
   const handleDelete = useCallback(
@@ -95,7 +107,7 @@ export default function ItemView() {
       setIsSubmitting(true);
       try {
         await axiosInstance.delete(`/item/delete/${id}`);
-        mutate(endpoints.items.list);
+        mutate(`${endpoints.items.list}?page=${page}&limit=${limit}`);
       } catch (err) {
         console.error('Failed to delete item:', err);
         enqueueSnackbar(err.error || 'Something went wrong!', { variant: 'error' });
@@ -103,7 +115,7 @@ export default function ItemView() {
         setIsSubmitting(false);
       }
     },
-    [enqueueSnackbar]
+    [enqueueSnackbar, page, limit]
   );
 
   if (error) {
@@ -131,6 +143,57 @@ export default function ItemView() {
 
       return name.includes(query) || brand_name.includes(query) || category.includes(query);
     }) || [];
+
+  const renderItems = () => {
+    if (!items || items.length === 0) {
+      return (
+        <TableRow>
+          <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+            <Typography variant="body1">No Items found Please add a new item.</Typography>
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    if (!filteredItems || filteredItems.length === 0) {
+      return (
+        <TableRow>
+          <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+            <Typography variant="body1" color="text.secondary">
+              No customers found matching <strong>&quot;{searchQuery}&quot;</strong>. Try searching
+              by name, brand name, or category.
+            </Typography>
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    return filteredItems.map((item) => (
+      <TableRow key={item._id}>
+        <TableCell>{item.item_name || 'N/A'}</TableCell>
+        <TableCell>{item.sku || 'N/A'}</TableCell>
+        <TableCell>{item.brand_name || 'N/A'}</TableCell>
+        <TableCell>{item.category || 'N/A'}</TableCell>
+        <TableCell align="center">{item.quantity ?? 'N/A'}</TableCell>
+        <TableCell align="center">{item.sold_quantity ?? 'N/A'}</TableCell>
+        <TableCell align="center">{item.remaining_quantity ?? 'N/A'}</TableCell>
+        <TableCell align="right">
+          <IconButton
+            color="primary"
+            onClick={() => {
+              setEditItem(item);
+              setOpenDrawer(true);
+            }}
+          >
+            <Edit />
+          </IconButton>
+          <IconButton color="error" onClick={(e) => handleOpenDeletePopover(e, item._id)}>
+            <Delete />
+          </IconButton>
+        </TableCell>
+      </TableRow>
+    ));
+  };
 
   return (
     <Container maxWidth={settings.themeStretch ? false : 'xl'}>
@@ -171,47 +234,18 @@ export default function ItemView() {
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
-            <TableBody>
-              {filteredItems && filteredItems.length > 0 ? (
-                filteredItems.map((item) => (
-                  <TableRow key={item._id}>
-                    <TableCell>{item.item_name}</TableCell>
-                    <TableCell>{item.sku}</TableCell>
-                    <TableCell>{item.brand_name}</TableCell>
-                    <TableCell>{item.category}</TableCell>
-                    <TableCell align="center">{item.quantity}</TableCell>
-                    <TableCell align="center">{item.sold_quantity}</TableCell>
-                    <TableCell align="center">{item.remaining_quantity}</TableCell>
-                    <TableCell align="right">
-                      <IconButton
-                        color="primary"
-                        onClick={() => {
-                          setEditItem(item);
-                          setOpenDrawer(true);
-                        }}
-                      >
-                        <Edit />
-                      </IconButton>
-                      <IconButton
-                        color="error"
-                        onClick={(e) => handleOpenDeletePopover(e, item._id)}
-                      >
-                        <Delete />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
-                    <Typography variant="body1" color="text.secondary">
-                      No customers found matching <strong>&quot;{searchQuery}&quot;</strong>. Try
-                      searching by name, brand name, or category.
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
+            <TableBody>{renderItems()}</TableBody>
+            <TablePagination
+              count={totalItems}
+              page={page - 1}
+              onPageChange={(e, newPage) => setPage(newPage + 1)}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={(e) => {
+                setRowsPerPage(parseInt(e.target.value, 10));
+                setPage(1);
+              }}
+              rowsPerPageOptions={[5, 10, 25, 50]}
+            />
           </Table>
         )}
       </Paper>

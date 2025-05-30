@@ -18,19 +18,6 @@ import PropTypes from 'prop-types';
 export default function ViewInvoice({ invoiceData, customers, itemsList, onClose }) {
   const printRef = useRef();
 
-  // const handleGeneratePDF = () => {
-  //   const element = printRef.current;
-  //   const opt = {
-  //     margin: 0.5,
-  //     filename: `invoice_${invoiceData?.customerId || 'customer'}.pdf`,
-  //     image: { type: 'jpeg', quality: 0.98 },
-  //     html2canvas: { scale: 2 },
-  //     jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
-  //   };
-
-  //   html2pdf().set(opt).from(element).save();
-  // };
-
   const getCustomerName = (id) =>
     typeof id === 'string'
       ? customers.find((c) => c._id === id)?.name || 'N/A'
@@ -44,31 +31,14 @@ export default function ViewInvoice({ invoiceData, customers, itemsList, onClose
   const subtotal = invoiceData.items.reduce((sum, item) => sum + item.total, 0);
   const finalAmount = subtotal - (invoiceData.discount || 0);
 
-
   return (
     <Box>
-      {/*
-
-      <PDFDownloadLink
-        document={
-          <InvoicePDF
-            invoiceData={invoiceData}
-            getCustomerName={getCustomerName}
-            getItemName={getItemName}
-          />
-        }
-        fileName="invoice.pdf"
-      >
-        {({ blob, url, loading, error }) => (loading ? 'Loading document...' : 'Download now!')}
-      </PDFDownloadLink>
-*/}
-
       <Box ref={printRef} sx={{ p: 3 }}>
-        {/* <Typography variant="h4" gutterBottom>
-          Invoice Details
-        </Typography> */}
+        <Typography variant="h4" gutterBottom align="center">
+          Vihan Car Decor Invoice
+        </Typography>
 
-        {/* <Divider sx={{ mb: 2 }} /> */}
+        <Divider sx={{ mb: 2 }} />
 
         <Grid container spacing={2}>
           <Grid item xs={6}>
@@ -134,12 +104,23 @@ export default function ViewInvoice({ invoiceData, customers, itemsList, onClose
           </Table>
         </Paper>
 
-        <Box sx={{ mt: 3, textAlign: 'right' }}>
-          <Typography>Subtotal: ₹{subtotal.toFixed(2)}</Typography>
-          <Typography>Discount: ₹{invoiceData.discount?.toFixed(2) || '0.00'}</Typography>
-          <Typography variant="h6" sx={{ mt: 1 }}>
-            Final Amount: ₹{finalAmount.toFixed(2)}
-          </Typography>
+        <Box sx={{ mt: 3, textAlign: 'right', maxWidth: 300, ml: 'auto' }}>
+          <Box display="flex" justifyContent="space-between">
+            <Typography fontWeight="bold">Subtotal:</Typography>
+            <Typography>₹{subtotal.toFixed(2)}</Typography>
+          </Box>
+
+          <Box display="flex" justifyContent="space-between">
+            <Typography fontWeight="bold">Discount:</Typography>
+            <Typography>₹{invoiceData.discount?.toFixed(2) || '0.00'}</Typography>
+          </Box>
+
+          <Box display="flex" justifyContent="space-between" mt={1}>
+            <Typography variant="h6" fontWeight="bold">
+              Final Amount:
+            </Typography>
+            <Typography variant="h6">₹{finalAmount.toFixed(2)}</Typography>
+          </Box>
         </Box>
       </Box>
 

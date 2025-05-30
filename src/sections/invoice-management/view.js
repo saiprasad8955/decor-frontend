@@ -15,7 +15,9 @@ import {
   CircularProgress,
   Backdrop,
   TextField,
+  TablePagination,
 } from '@mui/material';
+import Label from 'src/components/label';
 import { useSnackbar } from 'src/components/snackbar';
 import dayjs from 'dayjs';
 import { Edit, Delete, Visibility } from '@mui/icons-material';
@@ -42,7 +44,19 @@ export default function InvoiceView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: invoices, error, isLoading } = useSWR(endpoints.invoice.list, fetcher);
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const limit = 10;
+
+  const {
+    data: invoicesData,
+    error,
+    isLoading,
+  } = useSWR(`${endpoints.invoice.list}?page=${page}&limit=${rowsPerPage}`, fetcher);
+
+  const invoices = invoicesData?.data || [];
+  const totalInvoices = invoicesData?.total || 0;
+
   const { data: customers } = useSWR(endpoints.customer.list, fetcher);
   const { data: itemsList } = useSWR(endpoints.items.list, fetcher);
 
@@ -74,13 +88,13 @@ export default function InvoiceView() {
 
         if (editInvoice) {
           response = await axiosInstance.put(`/invoice/update/${editInvoice._id}`, data);
-          mutate(endpoints.invoice.list);
+          mutate(`${endpoints.customer.list}?page=${page}&limit=${limit}`);
           if (response?.status === 200) {
             enqueueSnackbar('Invoice updated successfully.', { variant: 'success' });
           }
         } else {
           response = await axiosInstance.post('/invoice/add', data);
-          mutate(endpoints.invoice.list);
+          mutate(`${endpoints.customer.list}?page=${page}&limit=${limit}`);
           if (response?.status === 201) {
             enqueueSnackbar('Invoice added successfully.', { variant: 'success' });
           }
@@ -93,7 +107,7 @@ export default function InvoiceView() {
         setIsSubmitting(false);
       }
     },
-    [editInvoice, enqueueSnackbar]
+    [editInvoice, enqueueSnackbar, page, limit]
   );
 
   const handleDelete = useCallback(
@@ -101,7 +115,7 @@ export default function InvoiceView() {
       setIsSubmitting(true);
       try {
         await axiosInstance.delete(`/invoice/delete/${id}`);
-        mutate(endpoints.invoice.list);
+        mutate(`${endpoints.customer.list}?page=${page}&limit=${limit}`);
         enqueueSnackbar('Invoice deleted successfully.', { variant: 'success' });
       } catch (err) {
         console.error('Failed to delete customer:', err);
@@ -110,7 +124,7 @@ export default function InvoiceView() {
         setIsSubmitting(false);
       }
     },
-    [enqueueSnackbar] // No dependencies needed
+    [enqueueSnackbar, page, limit] // No dependencies needed
   );
 
   const downloadInvoicePdf = async (id) => {
@@ -160,6 +174,105 @@ export default function InvoiceView() {
       );
     }) || [];
 
+  const renderInvoices = () => {
+    if (!invoices || invoices.length === 0) {
+      return (
+        <TableRow>
+          <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+            <Typography variant="body1">No Invoices found Please add a new invoice.</Typography>
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    if (filteredInvoices.length === 0) {
+      return (
+        <TableRow>
+          <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+            <Typography variant="body1">
+              No Invoices found matching <strong>&quot;{searchQuery}&quot;</strong>.
+            </Typography>
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    return filteredInvoices.map((invoice) => (
+      <TableRow key={invoice._id}>
+        <TableCell>
+          {invoice.invoice_number ? (
+            <Label color="success" variant="soft">
+              {invoice.invoice_number}
+            </Label>
+          ) : (
+            'N/A'
+          )}
+        </TableCell>
+        <TableCell>{invoice.customerId?.name || 'N/A'}</TableCell>
+        <TableCell>{invoice.sales_person || 'N/A'}</TableCell>
+        <TableCell>{new Date(invoice.invoice_date).toLocaleDateString() || 'N/A'}</TableCell>
+        <TableCell>₹ {invoice.final_amount.toFixed(2) || 'N/A'}</TableCell>
+        <TableCell align="right">
+          <IconButton
+            color="primary"
+            onClick={() => {
+              const invoiceD = {
+                _id: invoice._id,
+                customerId: invoice.customerId._id,
+                sales_person: invoice.sales_person,
+                invoice_date: dayjs(invoice.invoice_date),
+                delivery_date: dayjs(invoice.delivery_date),
+                description: invoice.description,
+                items: invoice.items.map((itemObj) => ({
+                  item: itemObj.item._id,
+                  quantity: itemObj.quantity,
+                  rate: itemObj.rate,
+                  tax: itemObj.tax,
+                  total: itemObj.total,
+                })),
+                discount: invoice.discount,
+              };
+              setEditInvoice(invoiceD);
+              setOpenDrawer(true);
+            }}
+          >
+            <Edit />
+          </IconButton>
+          <IconButton color="error" onClick={(e) => handleOpenDeletePopover(e, invoice._id)}>
+            <Delete />
+          </IconButton>
+          <IconButton
+            onClick={() => {
+              const invoiceD = {
+                _id: invoice._id,
+                customerId: invoice.customerId._id,
+                sales_person: invoice.sales_person,
+                invoice_date: dayjs(invoice.invoice_date),
+                delivery_date: dayjs(invoice.delivery_date),
+                description: invoice.description,
+                items: invoice.items.map((itemObj) => ({
+                  item: itemObj.item._id,
+                  quantity: itemObj.quantity,
+                  rate: itemObj.rate,
+                  tax: itemObj.tax,
+                  total: itemObj.total,
+                })),
+                discount: invoice.discount,
+              };
+              setViewInvoice(invoiceD);
+              setViewModal(true);
+            }}
+          >
+            <Visibility />
+          </IconButton>
+          <IconButton onClick={() => downloadInvoicePdf(invoice._id)}>
+            <DownloadIcon />
+          </IconButton>
+        </TableCell>
+      </TableRow>
+    ));
+  };
+
   return (
     <Container maxWidth={settings.themeStretch ? false : 'xl'}>
       <Stack direction="row" justifyContent="space-between" mb={3}>
@@ -188,6 +301,7 @@ export default function InvoiceView() {
           <Table>
             <TableHead>
               <TableRow>
+                <TableCell>Invoice #</TableCell>
                 <TableCell>Customer</TableCell>
                 <TableCell>Sales Person</TableCell>
                 <TableCell>Invoice Date</TableCell>
@@ -195,88 +309,18 @@ export default function InvoiceView() {
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
-            <TableBody>
-              {filteredInvoices?.length > 0 ? (
-                filteredInvoices.map((invoice) => (
-                  <TableRow key={invoice._id}>
-                    <TableCell>{invoice.customerId?.name}</TableCell>
-                    <TableCell>{invoice.sales_person}</TableCell>
-                    <TableCell>{new Date(invoice.invoice_date).toLocaleDateString()}</TableCell>
-                    <TableCell>₹ {invoice.final_amount.toFixed(2)}</TableCell>
-                    <TableCell align="right">
-                      <IconButton
-                        color="primary"
-                        onClick={() => {
-                          const invoiceD = {
-                            _id: invoice._id,
-                            customerId: invoice.customerId._id,
-                            sales_person: invoice.sales_person,
-                            invoice_date: dayjs(invoice.invoice_date),
-                            delivery_date: dayjs(invoice.delivery_date),
-                            description: invoice.description,
-                            items: invoice.items.map((itemObj) => ({
-                              item: itemObj.item._id,
-                              quantity: itemObj.quantity,
-                              rate: itemObj.rate,
-                              tax: itemObj.tax,
-                              total: itemObj.total,
-                            })),
-                            discount: invoice.discount,
-                          };
-                          setEditInvoice(invoiceD);
-                          setOpenDrawer(true);
-                        }}
-                      >
-                        <Edit />
-                      </IconButton>
-                      <IconButton
-                        color="error"
-                        onClick={(e) => handleOpenDeletePopover(e, invoice._id)}
-                      >
-                        <Delete />
-                      </IconButton>
-                      <IconButton
-                        // color="error"
-                        onClick={() => {
-                          const invoiceD = {
-                            _id: invoice._id,
-                            customerId: invoice.customerId._id,
-                            sales_person: invoice.sales_person,
-                            invoice_date: dayjs(invoice.invoice_date),
-                            delivery_date: dayjs(invoice.delivery_date),
-                            description: invoice.description,
-                            items: invoice.items.map((itemObj) => ({
-                              item: itemObj.item._id,
-                              quantity: itemObj.quantity,
-                              rate: itemObj.rate,
-                              tax: itemObj.tax,
-                              total: itemObj.total,
-                            })),
-                            discount: invoice.discount,
-                          };
-                          setViewInvoice(invoiceD);
-                          setViewModal(true);
-                        }}
-                      >
-                        <Visibility />
-                      </IconButton>
-                      <IconButton onClick={() => downloadInvoicePdf(invoice._id)}>
-                        <DownloadIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
-                    <Typography variant="body1">
-                      {' '}
-                      No customers found matching <strong>&quot;{searchQuery}&quot;</strong>.
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
+            <TableBody>{renderInvoices()}</TableBody>
+            <TablePagination
+              count={totalInvoices}
+              page={page - 1}
+              onPageChange={(e, newPage) => setPage(newPage + 1)}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={(e) => {
+                setRowsPerPage(parseInt(e.target.value, 10));
+                setPage(1); // reset to first page
+              }}
+              rowsPerPageOptions={[5, 10, 25, 50]}
+            />
           </Table>
         )}
       </Paper>
