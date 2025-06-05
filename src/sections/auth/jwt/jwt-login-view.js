@@ -47,8 +47,8 @@ export default function JwtLoginView() {
   });
 
   const defaultValues = {
-    email: 'shivrajbacha52@gmail.com',
-    password: 'Vihan@123',
+    email: '',
+    password: '',
   };
 
   const methods = useForm({
