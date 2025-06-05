@@ -6,9 +6,13 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import LoadingButton from '@mui/lab/LoadingButton';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
+import Link from '@mui/material/Link';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import InputAdornment from '@mui/material/InputAdornment';
+// routes
+import { RouterLink } from 'src/routes/components';
+
 // routes
 import { useSearchParams, useRouter } from 'src/routes/hook';
 // config
@@ -20,6 +24,7 @@ import { useAuthContext } from 'src/auth/hooks';
 // components
 import Iconify from 'src/components/iconify';
 import FormProvider, { RHFTextField } from 'src/components/hook-form';
+import { paths } from 'src/routes/paths';
 
 // ----------------------------------------------------------------------
 
@@ -73,13 +78,13 @@ export default function JwtLoginView() {
     <Stack spacing={2} sx={{ mb: 5 }}>
       <Typography variant="h4">Login</Typography>
 
-      {/* <Stack direction="row" spacing={0.5}>
+      <Stack direction="row" spacing={0.5}>
         <Typography variant="body2">New user?</Typography>
 
         <Link component={RouterLink} href={paths.auth.jwt.register} variant="subtitle2">
           Create an account
         </Link>
-      </Stack> */}
+      </Stack>
     </Stack>
   );
 

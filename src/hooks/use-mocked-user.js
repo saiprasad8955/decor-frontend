@@ -6,9 +6,8 @@ export function useMockedUser() {
 
   const user = {
     id: authUser?._id ?? '8864c717-587d-472a-929a-8e5f298024da-0',
-    displayName: 'Vihan Car Decor',
+    displayName: authUser?.firstName ? `${authUser.firstName} ${authUser.lastName}` : 'Demo User',
     email: authUser?.email ?? 'demo@cc.com',
-    // photoURL: _mock.image.avatar(24),
     phoneNumber: '+40 777666555',
     country: 'United States',
     address: '90210 Broadway Blvd',
